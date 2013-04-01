@@ -6,19 +6,31 @@ int main(int argc,char **argv)
     u_char buf[64];
     memset(buf,0,sizeof(buf));
 
-    md5_t md0(buf);
-    sha1_t sha0(buf);
+    md5_t null_md5 = md5_generator::hash_buf(buf,0);
+    sha1_t null_sha1 = sha1_generator::hash_buf(buf,0);
+    sha256_t null_sha256 = sha256_generator::hash_buf(buf,0);
 
-    buf[3] = 0x33;
+    std::cout << "hashing the null block:\n";
+    std::cout << "md5:    " << null_md5.hexdigest() << "\n";
+    assert(null_md5 == md5_t::fromhex("d41d8cd98f00b204e9800998ecf8427e"));
 
-    md5_t md1(buf);
-    sha1_t sha1(buf);
-    const sha1_t *sha2 = sha1_t::new_from_hex("0000003300000000000000000000000000000000");
+    std::cout << "sha1:   " << null_sha1.hexdigest() << "\n";
+    assert(null_sha1 == sha1_t::fromhex("da39a3ee5e6b4b0d3255bfef95601890afd80709"));
 
-    printf("sizeof(sha0)=%zd  %s\n",sizeof(sha0),sha0.hexdigest().c_str());
-    printf("sizeof(sha1)=%zd  %s\n",sizeof(sha1),sha1.hexdigest().c_str());
-    printf("sizeof(sha2)=%zd  %s\n",sizeof(sha2),sha2->hexdigest().c_str());
+    std::cout << "sha256: " << null_sha256.hexdigest() << "\n";
+    assert(null_sha256 == sha256_t::fromhex("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
 
-    printf("sha0==sha1? %d\n",sha0==sha1);
-    printf("sha1==sha12 %d\n",sha1==*sha2);
+#ifdef HAVE_SHA512_T
+    sha512_t null_sha512 = sha512_generator(buf,0);
+    std::cout << "sha512: " << null_sha512.hexdigest() << "\n";
+#endif
+
+    /* pre-initialize a hash from values */
+    md5_t md50(buf);
+    std::cout << "md50:  " << md50.hexdigest() << "\n";
+    md5_t md51 = md5_t::fromhex("00000000000000000000000000000000");
+    
+    assert(md50 == md51);
+
+    return(0);
 }

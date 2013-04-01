@@ -4,11 +4,19 @@
  * hash representation classes: md5_t, sha1_t, sha256_t (sha512_t)
  * has generators: md5_generator(), sha1_generator(), sha256_generator()
  *
- * md = sha1_t()
- * string md.hexdigest();
- * md.SIZE		    --- the size of the hash 
- * uint8_t md.digest[SIZE]   --- the buffer
- * uint8_t md.final()        --- synonym for md.digest
+ * Generating a hash:
+ * sha1_t val = sha1_generator::hash_buf(buf,bufsize)
+ * sha1_1 generator hasher;
+ *       hasher.update(buf,bufsize)
+ *       hasher.update(buf,bufsize)
+ *       hasher.update(buf,bufsize)
+ * sha1_t val = hasher.final()
+ *
+ * Using the values:
+ * string val.hexdigest()   --- return a hext digest
+ * val.size()		    --- the size of the hash in bytes
+ * uint8_t val.digest[SIZE] --- the buffer of the raw bytes
+ * uint8_t val.final()        --- synonym for md.digest
  */
 
 
@@ -44,68 +52,43 @@
 #include <sys/mmap.h>
 #endif
 
-/* wish that the hash fields below could be const, but C++ doesn't
- * allow initialization of a const array.
- * See: http://stackoverflow.com/questions/161790/initialize-a-const-array-in-a-class-initializer-in-c
- */
-class md5_ {
-public:
-    static const size_t SIZE=16;
-    uint8_t digest[SIZE];			
-};
-
-class sha1_ {
-public:
-    static const size_t SIZE=20;
-    uint8_t digest[SIZE];
-};
-
-class sha256_ {
-public:
-    static const size_t SIZE=32;
-    uint8_t digest[SIZE];
-};
-
-#ifdef HAVE_EVP_SHA512
-class sha512_ {
-public:
-    static const size_t SIZE=64;
-    uint8_t digest[SIZE];
-};
-#endif
-
-static int hexcharvals__[256];
-static int hexcharvals_init__ = 0;
-
-template<typename T> 
-class hash__:public T
+template<const EVP_MD *md(),size_t SIZE> 
+class hash__
 {
 public:
+    uint8_t digest[SIZE];
+    static size_t size() {
+        return(SIZE);
+    }
     hash__(){
     }
     hash__(const uint8_t *provided){
-	memcpy(this->digest,provided,this->SIZE);
+	memcpy(this->digest,provided,size());
     }
     const uint8_t *final() const {
 	return this->digest;
     }
     /* python like interface for hexdigest */
-    static unsigned int tohex(u_char ch){
+    static unsigned int hex2int(char ch){
 	if(ch>='0' && ch<='9') return ch-'0';
 	if(ch>='a' && ch<='f') return ch-'a'+10;
 	if(ch>='A' && ch<='F') return ch-'A'+10;
 	return 0;
     }
+    static unsigned int hex2int(char ch0,char ch1){
+        return (hex2int(ch0)<<4) | hex2int(ch1);
+    }
     static hash__ fromhex(const std::string &hexbuf) {
 	hash__ res;
-	for(unsigned int i=0;i+1<hexbuf.size() && (i/2)<this->SIZE;i+=2){
-	    res.digest[i/2] = (tohex(hexbuf[i])<<4) | tohex(hexbuf[i+1]);
+        assert(hexbuf.size()==SIZE*2);
+	for(unsigned int i=0;i+1<hexbuf.size() && (i/2)<size();i+=2){
+	    res.digest[i/2] = hex2int(hexbuf[i],hexbuf[i+1]);
 	}
 	return res;
     }
     const char *hexdigest(char *hexbuf,size_t bufsize) const {
 	const char *hexbuf_start = hexbuf;
-	for(unsigned int i=0;i<this->SIZE && bufsize>=3;i++){
+	for(unsigned int i=0;i<SIZE && bufsize>=3;i++){
 	    snprintf(hexbuf,bufsize,"%02x",this->digest[i]);
 	    hexbuf  += 2;
 	    bufsize -= 2;
@@ -114,7 +97,7 @@ public:
     }
     std::string hexdigest() const {
 	std::string ret;
-	char buf[this->SIZE*2+1];
+	char buf[SIZE*2+1];
 	return std::string(hexdigest(buf,sizeof(buf)));
     }
     /**
@@ -128,21 +111,8 @@ public:
     static int hex2bin(uint8_t *binbuf,size_t binbuf_size,const char *hex)
     {
 	int bits = 0;
-	if(hexcharvals_init__==0){
-	    /* Need to initialize this */
-	    int i;
-	    for(i=0;i<10;i++){
-		hexcharvals__['0'+i] = i;
-	    }
-	    for(i=10;i<16;i++){
-		hexcharvals__['A'+i-10] = i;
-		hexcharvals__['a'+i-10] = i;
-	    }
-	    hexcharvals_init__ = 1;
-	}
 	while(hex[0] && hex[1] && binbuf_size>0){
-	    *binbuf++ = ((hexcharvals__[(uint8_t)hex[0]]<<4) |
-			 hexcharvals__[(uint8_t)hex[1]]);
+	    *binbuf++ = hex2int(hex[0],hex[1]);
 	    hex  += 2;
 	    bits += 8;
 	    binbuf_size -= 1;
@@ -151,8 +121,8 @@ public:
     }
     static const hash__ *new_from_hex(const char *hex) {
 	hash__ *val = new hash__();
-	if(hex2bin(val->digest,sizeof(val->digest),hex)!=val->SIZE*8){
-	    std::cerr << "invalid input " << hex << "(" << val->SIZE*8 << ")\n";
+	if(hex2bin(val->digest,sizeof(val->digest),hex)!=SIZE*8){
+	    std::cerr << "invalid input " << hex << "(" << SIZE*8 << ")\n";
 	    exit(1);
 	}
 	return val;
@@ -161,24 +131,23 @@ public:
 	/* Check the first byte manually as a performance hack */
 	if(this->digest[0] < s2.digest[0]) return true;
 	if(this->digest[0] > s2.digest[0]) return false;
-	return memcmp(this->digest,s2.digest, this->SIZE) < 0;
+	return memcmp(this->digest,s2.digest, SIZE) < 0;
     }
     bool operator==(const hash__ &s2) const {
 	if(this->digest[0] != s2.digest[0]) return false;
-	return memcmp(this->digest,s2.digest, this->SIZE) == 0;
+	return memcmp(this->digest,s2.digest, SIZE) == 0;
     }
 };
 
-typedef hash__<md5_> md5_t;
-typedef hash__<sha1_> sha1_t;
-typedef hash__<sha256_> sha256_t;
+typedef hash__<EVP_md5,16> md5_t;
+typedef hash__<EVP_sha1,20> sha1_t;
+typedef hash__<EVP_sha256,32> sha256_t;
 #ifdef HAVE_EVP_SHA512
-typedef hash__<sha512_> sha512_t;
+typedef hash__<EVP_sha512,64> sha512_t;
 #endif
 
-template<typename T> 
-class hash_generator__:T { 			/* generates the hash */
-    const EVP_MD *md;
+template<const EVP_MD *md(),size_t SIZE> 
+class hash_generator__ { 			/* generates the hash */
     EVP_MD_CTX mdctx;	     /* the context for computing the value */
     bool initialized;	       /* has the context been initialized? */
     bool finalized;
@@ -192,25 +161,21 @@ class hash_generator__:T { 			/* generates the hash */
 public:
     int64_t hashed_bytes;
     /* This function takes advantage of the fact that different hash functions produce residues with different sizes */
-    hash_generator__():initialized(false),finalized(false),hashed_bytes(0){
-	switch(this->SIZE){
-	case 16: md = EVP_md5();break;
-	case 20: md = EVP_sha1();break;
-	case 32: md = EVP_sha256();break;
-#ifdef HAVE_EVP_SHA512
-	case 64: md = EVP_sha512();break;
-#endif
-	default:
-	    assert(0);
-	}
-    }
+    hash_generator__():initialized(false),finalized(false),hashed_bytes(0){ }
     ~hash_generator__(){
 	release();
+    }
+    void release(){			/* free allocated memory */
+	if(initialized){
+	    EVP_MD_CTX_cleanup(&mdctx);
+	    initialized = false;
+	    hashed_bytes = 0;
+	}
     }
     void init(){
 	if(initialized==false){
 	    EVP_MD_CTX_init(&mdctx);
-	    EVP_DigestInit_ex(&mdctx, md, NULL);
+	    EVP_DigestInit_ex(&mdctx, md(), NULL);
 	    initialized = true;
 	    finalized = false;
 	    hashed_bytes = 0;
@@ -225,14 +190,7 @@ public:
 	EVP_DigestUpdate(&mdctx,buf,bufsize);
 	hashed_bytes += bufsize;
     }
-    void release(){			/* free allocated memory */
-	if(initialized){
-	    EVP_MD_CTX_cleanup(&mdctx);
-	    initialized = false;
-	    hashed_bytes = 0;
-	}
-    }
-    hash__<T> final() {
+    hash__<md,SIZE> final() {
 	if(finalized){
 	  std::cerr << "currently friendly_geneator does not cache the final value\n";
 	  assert(0);
@@ -241,7 +199,7 @@ public:
 	if(!initialized){
 	  init();			/* do it now! */
 	}
-	hash__<T> val;
+	hash__<md,SIZE> val;
 	unsigned int len = sizeof(val.digest);
 	EVP_DigestFinal(&mdctx,val.digest,&len);
 	finalized = true;
@@ -249,7 +207,7 @@ public:
     }
 
     /** Compute a sha1 from a buffer and return the hash */
-    static hash__<T>  hash_buf(const uint8_t *buf,size_t bufsize){
+    static hash__<md,SIZE>  hash_buf(const uint8_t *buf,size_t bufsize){
 	/* First time through find the SHA1 of 512 NULLs */
 	hash_generator__ g;
 	g.update(buf,bufsize);
@@ -283,12 +241,13 @@ public:
 #endif
 };
 
-typedef hash_generator__<md5_> md5_generator;
-typedef hash_generator__<sha1_> sha1_generator;
-typedef hash_generator__<sha256_> sha256_generator;
+typedef hash_generator__<EVP_md5,16> md5_generator;
+typedef hash_generator__<EVP_sha1,20> sha1_generator;
+typedef hash_generator__<EVP_sha256,32> sha256_generator;
 
 #ifdef HAVE_EVP_SHA512
-typedef hash_generator__<sha512_> sha512_generator;
+typedef hash_generator__<EVP_sha512,64> sha512_generator;
+#define HAVE_SHA512_T
 #endif
 
 #endif

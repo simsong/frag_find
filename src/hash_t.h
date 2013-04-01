@@ -191,6 +191,7 @@ class hash_generator__:T { 			/* generates the hash */
     }
 public:
     int64_t hashed_bytes;
+    /* This function takes advantage of the fact that different hash functions produce residues with different sizes */
     hash_generator__():initialized(false),finalized(false),hashed_bytes(0){
 	switch(this->SIZE){
 	case 16: md = EVP_md5();break;

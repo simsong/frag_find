@@ -379,20 +379,14 @@ void xml::tagout(const string &tag,const string &attribute)
     *out << ">";
 }
 
-#if (!defined(HAVE_VASPRINTF)) || defined(_WIN32)
-#ifndef _WIN32
-#define ms_printf __print
-#define __MINGW_ATTRIB_NONNULL(x) 
-#endif
+#ifndef HAVE_VASPRINTF
 extern "C" {
     /**
      * We do not have vasprintf.
      * We have determined that vsnprintf() does not perform properly on windows.
      * So we just allocate a huge buffer and then strdup() and hope!
      */
-    int vasprintf(char **ret,const char *fmt,va_list ap)
-        __attribute__((__format__(ms_printf, 2, 0))) 
-        __MINGW_ATTRIB_NONNULL(2) ;
+    int vasprintf(char **ret,const char *fmt,va_list ap) __printflike(2,0);
     int vasprintf(char **ret,const char *fmt,va_list ap) 
     {
         /* Figure out how long the result will be */

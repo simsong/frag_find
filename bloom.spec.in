@@ -1,0 +1,72 @@
+Name: bloom
+Version: @VERSION@
+Release: 1
+Summary: NPS Bloom Filter Package
+Group: System Environment/Libraries
+License: Public Domain (USG Software; no license)
+Source: %{name}-%{version}.tar.gz
+URL: http://www.afflib.org/
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRequires: openssl-devel zlib-devel expat-devel 
+
+%description
+bloom is the a bloom filter package developed by the Naval Postgraduate School.
+It includes C, C++ and Java implementations, as well as some handy tools.
+
+%package devel
+Summary: Header files and libraries for developing applications for afflib
+Group: Development/Libraries
+Requires: bloom = %{version}-%{release}
+
+%description devel
+Header files and libraries for developing applications for afflib.
+
+%package tools
+Summary: Several tools for reading and writing Bloom Filters files
+Group: Applications/System
+Requires: openssl bloom = %{version}-%{release}
+BuildRequires: openssl-devel zlib-devel
+
+%description tools
+Several tools for reading and writing Bloom Filters.
+
+%prep
+%setup -q
+
+%build
+%configure --prefix=/usr --libdir=%{_libdir} --mandir=%{_mandir} 
+make %{?_smp_mflags}
+
+%install
+rm -rf ${RPM_BUILD_ROOT}
+make DESTDIR=${RPM_BUILD_ROOT} install
+
+%clean
+rm -rf ${RPM_BUILD_ROOT}
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
+%files
+%defattr(644,root,root,755)
+%doc AUTHORS ChangeLog COPYING NEWS README 
+%attr(755,root,root) %{_libdir}/*.so.*
+
+%files devel
+%defattr(644,root,root,755)
+%doc AUTHORS ChangeLog COPYING NEWS README 
+%{_libdir}/*.a
+%{_libdir}/*.la
+%{_libdir}/*.so
+%{_includedir}/bloom.h
+
+%files tools
+%defattr(644,root,root,755)
+%doc AUTHORS BUGLIST.txt ChangeLog COPYING NEWS README 
+%attr(755,root,root) %{_bindir}/*
+
+%changelog
+* Sun Feb 18 2010 Simson Garfinkel <simsong@acm.org> 1.0
+- Initial version
+

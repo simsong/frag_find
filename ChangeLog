@@ -1,0 +1,237 @@
+2012-03-28  Simson Garfinkel  <simsong@imac3.home>
+
+	* configure.ac: fixed ssl3_new check
+	incremented to version 1.4.7
+
+2012-03-09  Simson Garfinkel  <simsong@Mucha.local>
+
+	* src/bloom.c: removed duplicate #ifdef HAVE_SYS_MMAN_H
+
+2011-05-05  Simson Garfinkel  <simsong@alphonse-mucha.home>
+
+	* bloom.h (class NSRLBloom): removed fileio option
+
+2011-05-04  Simson Garfinkel  <simsong@Alphonse-Mucha.local>
+
+	* bloom.c (nsrl_bloom_info_update): fixed all memsets that had 0 before sizeof()
+
+2011-04-29  Simson Garfinkel  <simsong@localhost6.localdomain6>
+
+	* bloom.c (nsrl_hexbuf): removed numerous sign errors with increased warning level
+
+2011-04-27  Simson Garfinkel  <simsong@t>
+
+	* ../bulk_extractor/src/bloom.c: removed get_bit_fd(nsrl_bloom *b,const u_char *buf,uint32_t bit)
+	
+2011-04-13  Simson Garfinkel  <simsong@Magneto.local>
+
+	* java/Makefile.am (SUFFIXES): added NSRLBloom.java to Makefile.am. Wonder why nobody noticed it was missing before?
+
+2011-04-10  Simson Garfinkel  <simsong@imac3.local>
+
+	* configure.ac: updated to 1.4.6
+
+	* java/Makefile.am: java compile should now be optional with 'make test'
+
+2011-04-06  Simson Garfinkel  <simsong@imac3.home>
+
+	* hash_t.h final(): if final() is called before initialized, init! 
+
+2011-03-22  Simson Garfinkel  <simsong@imac3.home>
+
+	* src/frag_find.cpp (main): changed from SHA1 to MD5s. bloom filter changed from 160,M,5 to 128,M,4
+
+2011-03-21  Simson Garfinkel  <simsong@Silver.local>
+
+	* java/Makefile.am (EXTRA_DIST): modified so that Java gets included in distribution but doesn't get compiled unless you do a "make check"
+
+2011-03-20  Simson Garfinkel  <simsong@imac3.home>
+
+	* configure.ac: increased version number to 1.4.5.
+
+2011-03-16  Simson Garfinkel  <simsong@imac3.home>
+
+	* bloom.h (class NSRLBloom): now clears multithreaded on startup
+
+2011-03-10  Simson Garfinkel  <simsong@imac3.local>
+
+	* configure.ac: updated version to 1.4.4
+
+2011-03-03  Simson Garfinkel  <simsong@Silver-Surfer.local>
+
+	* hash_t.h: added #include <stdint.h> 
+
+2011-01-29  User User  <user@ubuntu>
+
+	* configure.ac: added sys/resource.h check
+
+2011-01-18  Simson Garfinkel  <simsong@imac3.home>
+
+	* hash_t.h (T): commented out hash_file for compilation on windows without MMAP.
+
+2010-12-17  Simson Garfinkel  <simsong@imac3.home>
+
+	* src/Makefile.am (precarve_SOURCES): removed threaded_hash.
+
+	* src/demo_threaded.cpp (main): removed; the idea didn't work.
+
+2010-12-13  Simson Garfinkel  <simsong@m.ern.nps.edu>
+
+	* configure.ac: incremented version number to 1.4.2
+	
+	* src/bloom.h: moved __STDC_FORMAT_MACROS to before #include inttype.h
+
+	* src/discriminator.h: added destructors for classes with virtual functions.
+
+
+2010-12-12  Simson Garfinkel  <simsong@Silver-Surfer.local>
+
+	* configure.ac: incremented version number to 1.4.2
+
+	* src/sha1_t.h (class hashbase_t): complete rewrite for newest version of OpenSSL. Apparently we had a memory allocation bug which didn't show up in the previous version.
+
+2010-12-12  Simson Garfinkel  <simsong@86.20.242.10.in-addr.arpa>
+
+	* src/discriminator.cpp (pdf_discriminator::identify): updated for new myregex.
+
+2010-12-09  Simson Garfinkel  <simsong@silver-surfer.home>
+
+	* bloom.c (nsrl_bloom_fprint_usage): only prints bloom lookups if it can figure them out.
+
+2010-09-11  User User  <user@ubuntu>
+
+	* src/bloom.h: added #define __STDDC_FORMAT_MACROS to bloom.h
+
+	* added check for srandomdev
+
+	* configure.ac: added -lm for including math on Ubuntu
+	increased verion to 1.4.1
+
+2010-09-03  Simson Garfinkel  <simsong@imac3.local>
+
+	* bloom.c (BloomHash): fixed bug - was hashing str and not buf
+
+2010-07-29  Simson Garfinkel  <simsong@Silver-Surfer.local>
+
+	* threaded_hash.h: added #ifdef for stdint.h
+
+2010-07-28  Simson Garfinkel  <simsong@Silver-Surfer.local>
+
+	* configure.ac: added block_scan
+
+2010-06-26  Simson Garfinkel  <simsong@Silver-Surfer.local>
+
+	* bloom.h (nsrl_bloom): made print_usage and fprint_usage static members
+
+2010-06-12  Simson Garfinkel  <simsong@Silver-Surfer.local>
+
+	* bloom.c (nsrl_bloom_fprint_info): added BLOOM_CALC_P to print computed false positive rate.
+
+2010-05-20  Simson L. Garfinkel  <simsong@ubuntu>
+
+	* configure.ac: increased version number to 1.3.2
+
+	* src/regression.cpp (main): fixed overflow in regression.cpp
+
+	* configure.ac: removed setting of -m64 option. It caused problems
+	on Ubuntu 32-bit systems which could compile for 64-bit X86 but
+	couldn't run it.
+
+2010-05-20  Simson L. Garfinkel  <simsong@ps14412.dreamhostps.com>
+
+	* configure.ac: added conditional compile for AFFLIB
+
+2010-03-06  Simson L. Garfinkel  <simsong@Silver-SSD.local>
+
+	* configure.ac: version number increased to 1.3.1
+
+	* src/frag_find.cpp (usage): whoops; usage got -x and -X reversed
+
+2010-01-19  Simson L. Garfinkel  <simsong@Silver-SSD.local>
+
+	* src/bloom.c (nsrl_bloom_create): removed b->hash_bits from the bloom structure.
+
+2010-01-12  Simson L. Garfinkel  <simsong@Silver-SSD.local>
+
+	* configure.ac: increased version counter to 1.3.
+
+	* src/frag_find.cpp (targetfile::print_report): now outputs digital forensics XML for found files.
+
+2009-11-28  Simson Garfinkel  <simsong@Silver-Surfer.local>
+
+	* src/frag_find.cpp (std::vector): porting to java discovered an array error.Fixed.
+
+2009-11-23  Simson Garfinkel  <simsong@m.ern.nps.edu>
+
+	* src/sha1_t.h: added stdint.h to sha1_t.h
+
+2009-11-15  Simson Garfinkel  <simsong@t>
+
+	* src/bloom.h (nsrl_bloom_): now compiles on 64-bit ubuntu linux
+
+2009-10-24  Simson Garfinkel  <simsong@Silver-Surver.local>
+
+	* upped version counter to 1.2.3
+
+	* src/*.cpp: corrected all cpp files to include config.h
+
+	* src/*.cpp: rewrote all to use EVP system.
+
+	* src/configure.ac: changed bloomconfig.h to config.h
+
+2009-10-23  Simson Garfinkel  <simsong@135.sub-75-227-3.myvzw.com>
+
+	* bloom.c: now will compile without OPENSSL_HMAC_H (but less functionality)
+
+2009-08-30  Simson Garfinkel  <simsong@imac2.local>
+
+	* src/bloom.c (nsrl_hex2bin): added a new parameter, binbuf_size (it should have been there originally) 
+
+2009-08-29  Simson Garfinkel  <simsong@Silver-Surver.local>
+
+
+2009-07-15  Simson Garfinkel  <simsong@Silver-Surfer-2.local>
+
+	* bloom.c (nsrl_bloom_create): vector_bytes was allocating twice as large as it should have been! Failed on a 32-bit system when allocating a big bloom.
+
+2009-07-13  Simson Garfinkel  <simsong@Silver-Surfer-2.local>
+
+	* configure.ac: version number increased to 1.2.2
+
+	* bloom.c (nsrl_bloom_query): b->key was being set when encryption was not enabled. This resulted in saved bloom filters not being readable. I wonder why no one caught this.
+
+2009-07-05  Simson Garfinkel  <simsong@imac2.local>
+
+	* configure.ac: version upped to 1.2.1 Turns out that on Linux the blocksize was coming in as 1024 bytes but that a lot of the other code assumed 512-byte sectors.
+
+2009-04-15  Simson Garfinkel  <simsong@233.sub-70-198-51.myvzw.com>
+
+	* frag_find.cpp (class blockfile): fixed a bug in opening files.
+
+2009-04-09  Simson Garfinkel  <simsong@Silver-Surfer-2.local>
+
+	* configure.ac: Increased version to 1.1.
+
+	* frag_find.cpp (main): added a bitvector of length 2^24 to
+	keep track of whether or not each block actually needs to be
+	hashed. 
+
+	* Added status output because people get bored; accurately predicts when run will be finished.
+
+	* Added support for ^t (SIGINFO) under Mac and FreeBSD.
+
+2009-03-16  Simson L. Garfinkel  <simsong@domex.nps.edu>
+
+	* configure.ac: added CPPFLAGS="-D_FILE_OFFSET_BITS=64 $CPPFLAGS"
+
+2009-03-10  Simson Garfinkel  <simsong@imac2.local>
+
+	* configure.ac: added -D_FILE_OFFSET_BITS=64.
+
+2008-09-04  Simson Garfinkel  <simsong@Silver-Surfer.local>
+
+	* bloom.h (nsrl_bloom_): changed bloom_bits member to "M" for agreement with our paper.
+
+	* bloom.c (nsrl_bloom_open): made debug a variable within the structure.
+
+

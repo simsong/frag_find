@@ -1,0 +1,206 @@
+frag_find:  finding file fragments in disk images using sector hashing
+
+
+frag_find is a program for finding blocks of a TARGET file in a disk
+IMAGE file.  This is useful in cases where a TARGET file has been
+stolen and you wish to establish that the file has been present on a
+subject's drive. If most of the TARGET file's sectors are found on the
+IMAGE drive---and if the sectors are in consecutive sector
+runs---then the chances are excellent that the file was once there.
+
+The idea of using individual sector hashes in this manner has been
+discussed in the forensic community for several years. Frag_find is an
+efficient and easy-to-use tool that perform this process.
+
+frag_find relies on two observations about files and file systems:
+
+1 - Most file systems tend to block-align files stored within the file
+    system. So if you break up an 8K file into 16 different 512-byte
+    blocks, then store that file in a file system, it's likely that
+    those 16 different "file blocks" will be stored each in its own
+    individual disk sector.
+
+2 - Most 512-byte blocks within most files are "unique" --- that is,
+    they do not appear by chance in other files. This is especially
+    true for files that are compressed (like zip and docx files) and
+    files that are encrypted. It is less true of files such as
+    Microsoft Word doc files that are likely to have one or more
+    blocks filled with NULLs or some other constant.
+
+    frag_find deals with the problem of non-unique blocks by looking
+    for runs of matching blocks, rather than individual blocks.
+
+
+frag_find is fast because:
+
+  * Initial filtering of presence/absence is done using the NPS Bloom
+    filter implementation, an efficient memory-mapped Bloom
+    implementation designed to be used with hash functions.
+  * Hashes are stored in efficient C++ structures.
+  * All computations are done in binary, rather than hex.
+
+OPTIONS:
+
+The following options are available:
+   -b blocksize   - sets the blocksize (default is 512 bytes).
+   -s <start>     - start the image scan at <start> (default is start
+                    of image)
+   -e <end>       - stop the image scan at <end> (default is end of image) 		   
+   -r             - prints the raw association map, in addition to the cleaned one
+
+
+MEMORY USAGE:
+
+frag_find uses 512MB of RAM for the Bloom filter, approximately 1MB
+of RAM for bookkeeping, and roughly 64 bytes for every block of the
+target file.
+
+
+AVAILABILITY:
+
+frag_find is part of the NPS Bloom package, which can be downloaded
+from http://www.afflib.org/.
+
+The current version is:
+
+     http://www.afflib.org/downloads/bloom-1.0.0.tar.gz
+
+
+Just type ./configure && make && make install
+
+
+LICENSE:
+
+The NPS Bloom Filter implementation is Public Domain. 
+
+
+EXAMPLES
+Below we have three examples. All were made with the disk images
+available at http://www.digitalcorpora.org/.
+
+
+================================================================
+EXAMPLE 1 - Quick Demo
+
+The file IMG_0043.JPG was extracted from the disk image
+nps-2009-canon2-gen6.raw. We then tried to use the frag_find
+command to find the file in the disk image from which it was extracted:
+
+$ frag_find /corp/images/nps/nps-2009-canon2/nps-2009-canon2-gen6.raw IMG_0043.JPG 
+
+
+Blocksize: 512
+Target file: IMG_0043.JPG  5535 blocks
+Image file:  /corp/images/nps/nps-2009-canon2/nps-2009-canon2-gen6.raw  60800 blocks
+Blocks of target file found in image file: 6252
+Here is where they were found:
+Input Block(s)     Found at block
+         0-543                 3040-3583         (544 blocks)
+       544-3423                5248-8127         (2880 blocks)
+      3424-4959                8608-10143        (1536 blocks)
+      4960-5534               11840-12414        (575 blocks)
+
+Total time: 1.33 seconds  (MacBook Pro with 4GB of RAM)
+
+================================================================
+EXAMPLE 2 - An Embedded File System
+
+In this example we show how frag_find can detect documents that are in
+embedded file systems. This works because most operating systems start
+files on 512-byte boundaries, so files in embedded file systems tend
+to be block-aligned, just like files that are not in embedded file systems.
+
+
+The file Managing_Information_Risk.pdf was downloaded from the NIST
+website. This file is 3,495,744 bytes long and has a sha1 of
+3c0885483d0833b966346cf17364590a4a4df338. 
+
+We searched for this file in the 600MB ubnist1.casper-rw.gen3.raw disk image:
+
+$ ./frag_find /corp/images/nps/nps-2009-casper-rw/ubnist1.casper-rw.gen3.raw Managing_Information_Risk.pdf 
+
+Target file Managing_Information_Risk.pdf   (6827 blocks)
+Image file ubnist1.casper-rw.gen3.raw       (1228800 blocks)
+Blocks of input file found in image file: 13654
+Here is where they were found:
+Input Block(s)     Found at block
+         0-15                669456-669471       (16 blocks)
+        16-39                707184-707207       (24 blocks)
+        40-95                707216-707271       (56 blocks)
+        96-135               707280-707319       (40 blocks)
+       136-143               716440-716447       (8 blocks)
+       144-151               716576-716583       (8 blocks)
+       152-2047              716592-718487       (1896 blocks)
+      2048-3029              718504-719485       (982 blocks)
+      3030-4079              719486-720535       (1050 blocks)
+      4080-4087              720952-720959       (8 blocks)
+      4088-4231              740160-740303       (144 blocks)
+      4232-4862              746880-747510       (631 blocks)
+      4863-5231              747511-747879       (369 blocks)
+      5232-6826              747936-749530       (1595 blocks)
+Total blocks of original file found: 6827 (100%)
+
+Total time: 16 seconds 
+(Hardware: MacPro with 7200 RPM SATA drives)
+
+(For comparison, the time to read the entire
+ubnist1.casper-rw.gen3.raw disk image and compute the SHA1 was 4.5
+seconds.)
+
+What's interesting about ubnist1.casper-rw.gen3.raw is that this disk
+image is itself an embedded file system in the 2GB file
+ubnist1.gen3.raw. (This file is a bootable Ubuntu distribution). We
+can run the frag_find program on the 2GB file:
+
+Input file size: 6827 blocks
+Image file size: 4114432 blocks
+Blocks of input file found in image file: 13654
+Here is where they were found:
+Input Block(s)     Found at block
+         0-15               2108493-2108508      (16 blocks)
+        16-39               2146221-2146244      (24 blocks)
+        40-95               2146253-2146308      (56 blocks)
+        96-135              2146317-2146356      (40 blocks)
+       136-143              2155477-2155484      (8 blocks)
+       144-151              2155613-2155620      (8 blocks)
+       152-2047             2155629-2157524      (1896 blocks)
+      2048-3029             2157541-2158522      (982 blocks)
+      3030-4079             2158523-2159572      (1050 blocks)
+      4080-4087             2159989-2159996      (8 blocks)
+      4088-4231             2179197-2179340      (144 blocks)
+      4232-4862             2185917-2186547      (631 blocks)
+      4863-5231             2186548-2186916      (369 blocks)
+      5232-6826             2186973-2188567      (1595 blocks)
+Total blocks of original file found: 6827 (100%)
+
+Time: 48 seconds for 2GB file)
+(Hardware: MacPro with 7200 RPM SATA drives)
+
+================================================================
+EXAMPLE #3 - Running against a 40GB disk image:
+
+To see how practical frag_find is, we ran it on
+nps-2009-realistic.raw, a 40GB "realistic" disk image developed for an
+unrelated research project. We were looking for the file
+domexuser2.JPG, a 19920 byte JPEG file with the SHA1 of
+6d4821892cc68ebe147812a9dc9c4130b22cac98.
+
+
+Blocksize: 512
+Target file: /Users/simsong/domexuser2.JPG  38 blocks
+Image file:  /corp/images/nps/nps-2009-domexusers/nps-2009-realistic.raw  83886080 blocks
+Blocks of target file found in image file: 39
+Here is where they were found:
+Target Block(s)     Found at image block
+         0-7                1871623-1871630      (8 blocks)
+         8-31               3008583-3008606      (24 blocks)
+        32-37              17319871-17319876     (6 blocks)
+Total blocks of original file found: 38 (100%)
+
+total time: 28 min, 21 seconds
+(Hardware: Macintosh Xserve with data stored on a rather slow Mac
+XServe RAID.)
+
+
+================================================================
+

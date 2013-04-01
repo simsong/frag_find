@@ -1,0 +1,38 @@
+frag_find:
+ * Need to rework the sha1_t so that one object represnts the hash but another calculates it.
+
+* Involve Pierre-Yves Bonnetain <py.bonnetain@ba-consultants.fr>
+ - frag_find - have a fast signature first. Hash every 4 blocks by default. FIgure out the unsigned vs. signed problem.
+
+
+Check should:
+ * Report speed by performing 1M lookups with SHA1
+ * - calculate them in advance, set the even ones, 
+ * - computes with memory-mapped and with file-based (C), and Java
+ * - Speed of CRC64, CRC256, MD5, SHA1 and SHA256
+
+Java work:
+Java Bloom
+
+64 bit vs. 32 bit java
+Write a program that creates a 4GB array and see how fast/slow it runs
+
+- Set of target docks
+- Show if it is found in multiple places
+- Show # of other places it is?
+- Write report
+- SHA of diskimage
+- Sha of target files.
+===
+Frag_find is about to get the swiss-army knife on our department.
+Everytime somebody has a difficult job we now make the joke that
+frag_find does the job for you:)
+
+We even used frag_find to reassemble a raid 5 set of a lot of disks and
+we're nearly at the point of fixing it. We had no information what so
+ever, we only received 10 disks. We could you some reference files as
+input for frag_find. By using frag_find you know were the file start and
+you can search for the allocation pattern on all the disks. With the
+output from frag_find you can follow the file very easily giving you
+information on the disk order, block size and were the parity should be
+allocated.

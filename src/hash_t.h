@@ -17,6 +17,9 @@
  * val.size()		    --- the size of the hash in bytes
  * uint8_t val.digest[SIZE] --- the buffer of the raw bytes
  * uint8_t val.final()        --- synonym for md.digest
+ *
+ * This can be updated in the future for Mac so that the hash__ class
+ * is then subclassed by a hash__openssl or a hash__commonCrypto class.
  */
 
 

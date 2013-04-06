@@ -10,4 +10,5 @@ touch stamp-h
 aclocal
 autoconf -f
 automake -a -c
-echo "ready to run ./configure"
+./configure
+

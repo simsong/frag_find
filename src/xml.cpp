@@ -94,10 +94,9 @@ static const char *xml_header = "<?xml version='1.0' encoding='UTF-8'?>\n";
 #ifndef HAVE_MKSTEMP
 int mkstemp(char *tmpl)
 {
-   int ret=-1;
-   mktemp(tmpl);
-   ret=open(tmpl,O_RDWR|O_BINARY|O_CREAT|O_EXCL|_O_SHORT_LIVED, _S_IREAD|_S_IWRITE);
-   return ret;
+   const char *r = mktemp(tmpl);
+   if(r[0]==0) return -1;             // if unique name could not be created, template is made with an empty string
+   return open(tmpl,O_RDWR|O_BINARY|O_CREAT|O_EXCL|_O_SHORT_LIVED, _S_IREAD|_S_IWRITE);
 }
 #endif
 
@@ -386,7 +385,7 @@ extern "C" {
      * We have determined that vsnprintf() does not perform properly on windows.
      * So we just allocate a huge buffer and then strdup() and hope!
      */
-    int vasprintf(char **ret,const char *fmt,va_list ap) __printflike(2,0);
+    int vasprintf(char **ret,const char *fmt,va_list ap);
     int vasprintf(char **ret,const char *fmt,va_list ap) 
     {
         /* Figure out how long the result will be */

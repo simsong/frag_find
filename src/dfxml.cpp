@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <netinet/in.h>
+#include <algorithm>
 
 #include "dfxml.h"
 

@@ -26,6 +26,9 @@
 #ifndef  HASH_T_H
 #define  HASH_T_H
 
+#include <cstring>
+#include <cstdlib>
+
 /**
  * For reasons that defy explanation (at the moment), this is required.
  */

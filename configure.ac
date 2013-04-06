@@ -4,7 +4,7 @@
 # See http://autotoolset.sourceforge.net/tutorial.html
 # and http://www.openismus.com/documents/linux/automake/automake.shtml
 
-AC_INIT(BLOOM, 1.4.7, bugs@afflib.org)
+AC_INIT(FRAG_FIND, 1.0.0, bugs@afflib.org)
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 
@@ -46,7 +46,7 @@ done
 ### Bloom support
 AC_TYPE_INT64_T
 AC_CHECK_HEADERS([openssl/hmac.h openssl/pem.h])
-AC_CHECK_FUNCS([printf getrusage err errx warn warnx mmap srandomdev])
+AC_CHECK_FUNCS([printf getrusage err errx warn warnx mmap srandomdev vasprintf])
 AC_CHECK_HEADERS([err.h sys/mman.h sys/resource.h unistd.h sys/resource.h])
 
 ### for bloom_test
@@ -71,7 +71,7 @@ AC_CHECK_FUNCS([ishexnumber])
 AC_HEADER_STDC
 AC_CHECK_FUNCS([printf getrusage atoi64])
 AC_CHECK_HEADERS([err.h inttypes.h sys/disk.h sys/mman.h sys/resource.h unistd.h openssl/hmac.h openssl/pem.h sys/utsname.h regex.h])
-AC_CHECK_LIB([mysqlclient],[mysql_real_connect],,AC_MSG_WARN([mysql client not found]))
+# AC_CHECK_LIB([mysqlclient],[mysql_real_connect],,AC_MSG_WARN([mysql client not found]))
 AC_CHECK_LIB([ssl],[ssl3_write],,AC_MSG_WARN([OpenSSL developer library 'libssl-dev' may not be installed...]))
 AC_CHECK_LIB([crypto],[MD5_Update],,AC_MSG_ERROR([OpenSSL developer library 'libcrypto' not installed; cannot continue.]))
 AC_CHECK_LIB([afflib],[af_open])

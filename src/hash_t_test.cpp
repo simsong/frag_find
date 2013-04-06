@@ -1,5 +1,8 @@
 
 #include "hash_t.h"
+#include <cstring>
+#include <cstdlib>
+#include <iostream>
 
 int main(int argc,char **argv)
 {

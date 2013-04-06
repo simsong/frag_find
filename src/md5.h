@@ -22,6 +22,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
@@ -163,17 +165,17 @@ public:
 	if(fd<0) throw fname;
 	struct stat st;
 	if(fstat(fd,&st)<0){
-	    close(fd);
+	    ::close(fd);
 	    throw fname;
 	}
 	const uint8_t *buf = (const uint8_t *)mmap(0,st.st_size,PROT_READ,MAP_FILE|MAP_SHARED,fd,0);
 	if(buf==0){
-	    close(fd);
+	    ::close(fd);
 	    throw fname;
 	}
 	md5_t s = hash_buf(buf,st.st_size);
 	munmap((void *)buf,st.st_size);
-	close(fd);
+	::close(fd);
 	return s;
     }
 #endif

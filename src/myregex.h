@@ -8,13 +8,13 @@
 #ifndef MYREGEX_H
 #define MYREGEX_H
 
-#include <string>
+#include <cstring>
+#include <cstdlib>
 #include <iostream>
 #include <assert.h>
 
 extern "C" {
 #include <regex.h>
-#include <string.h>
 }
 
 

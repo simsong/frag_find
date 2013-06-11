@@ -59,7 +59,6 @@ string _e = string("");
 void *initial_break = 0;
 
 blockfile imagefile;			// the file we are reading
-//SHOULD BE LOCAL VAR uint32_t blocksize = DEFAULT_BLOCKSIZE;
 bool use_prefilter = 0;
 int opt_raw = 0;
 
@@ -511,6 +510,7 @@ int main(int argc,char **argv)
     class xml *x = 0;
     string command_line;
     uint32_t blocksize = DEFAULT_BLOCKSIZE;
+    string opt_md5;
 
     /* Make a copy of the command line */
     for(int i=0;i<argc;i++){
@@ -528,7 +528,7 @@ int main(int argc,char **argv)
 	case 'b': blocksize = atoi(optarg); break;
 	case 'S': opt_stats++;break;
 	case 'M': opt_M     = atoi(optarg); break;
-	case 'm': masters.read_md5deep(optarg,blocksize); break;//TODO: properly get blocksize
+	case 'm': opt_md5 = optarg; break;
 	case 'X':
 	    switch(atoi(optarg)){
 	    case 1: use_bloom = 0;break;
@@ -551,6 +551,7 @@ int main(int argc,char **argv)
 	fprintf(stderr,"M must be between 5 and 32.\n");
 	exit(1);
     }
+    if (!opt_md5.empty()) masters.read_md5deep(opt_md5.c_str(),blocksize);
 
     argc -= optind; 
     argv += optind;

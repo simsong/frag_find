@@ -1,7 +1,7 @@
 frag_find
 =========
 
-Hash-based carver tool.  Download available at http://afflib.org/downloads/frag_find/
+Hash-based carver tool.  Download available at http://digitalcorpora.org/downloads/frag_find/
 
 Previously this was called the NPS Bloom Filter package
 

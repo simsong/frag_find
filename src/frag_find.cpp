@@ -59,7 +59,6 @@ string _e = string("");
 void *initial_break = 0;
 
 blockfile imagefile;			// the file we are reading
-uint32_t blocksize = DEFAULT_BLOCKSIZE;
 bool use_prefilter = 0;
 int opt_raw = 0;
 
@@ -249,11 +248,11 @@ public:;
     md5map_t md5map;
     filemap_t filemap;
     void add_block_hash(uint32_t blocknumber,const md5_t &md5,NSRLBloom &b);
-    void load(const char *fname,NSRLBloom &b);
-    void print_report(class xml *);
+    void load(const char *fname,NSRLBloom &b, uint32_t blocksize);
+    void print_report(class xml *, uint32_t blocksize);
 };
 
-void masterfile::print_report(class xml *x) {
+void masterfile::print_report(class xml *x, uint32_t blocksize) {
     printf("Master Block(s)     Found at image block\n");
     for(uint64_t tb=0;tb<(uint64_t)filemap.size();){
 	if (filemap[tb].size()==0){
@@ -358,7 +357,7 @@ void masterfile::add_block_hash(uint32_t blocknumber,const md5_t &md5,NSRLBloom 
     b.add(md5.digest);
 }
 
-void masterfile::load(const char *fname,NSRLBloom &b)
+void masterfile::load(const char *fname,NSRLBloom &b, uint32_t blocksize)
 {
     if(this->open(fname,blocksize)<0){
 	err(1,"Error: Cannot open %s",fname);
@@ -397,8 +396,8 @@ public:;
     masters_t():reg("([0-9a-f]{32})  (.*) offset ([0-9]+)-([0-9]+)",0){};
     NSRLBloom b;			  // bloom prefilter
     void bloom_create(int opt_M);	  // initialize the bloom filter
-    void add_master_file(const char *fn); // piecewise hash a file
-    void read_md5deep(const char *fn);	// read a set of files
+    void add_master_file(const char *fn, uint32_t blocksize); // piecewise hash a file
+    void read_md5deep(const char *fn, uint32_t blocksize);	// read a set of files
 };
 
 
@@ -412,11 +411,11 @@ void masters_t::bloom_create(int opt_M)
     printf("Bloom filter created.\n");
 }
 
-void masters_t::add_master_file(const char *fn)
+void masters_t::add_master_file(const char *fn, uint32_t blocksize)
 {
     printf("Adding Master File: %s (file #%zd)\n",fn,this->size()+1);
     masterfile *t = new masterfile();
-    t->load(fn,b);
+    t->load(fn,b,blocksize);
     this->push_back(t);
 }
 
@@ -440,7 +439,7 @@ int masters_t::md5deep_parse(string line,string *md5hex,string *fname,int64_t *s
     return 0;
 }
 
-void masters_t::read_md5deep(const char *fn)
+void masters_t::read_md5deep(const char *fn, uint32_t blocksize)
 {
     ifstream f(fn);
     if(!f.is_open()){
@@ -510,6 +509,8 @@ int main(int argc,char **argv)
     uint64_t bloom_false_positives=0;
     class xml *x = 0;
     string command_line;
+    uint32_t blocksize = DEFAULT_BLOCKSIZE;
+    string opt_md5;
 
     /* Make a copy of the command line */
     for(int i=0;i<argc;i++){
@@ -527,7 +528,7 @@ int main(int argc,char **argv)
 	case 'b': blocksize = atoi(optarg); break;
 	case 'S': opt_stats++;break;
 	case 'M': opt_M     = atoi(optarg); break;
-	case 'm': masters.read_md5deep(optarg); break;
+	case 'm': opt_md5 = optarg; break;
 	case 'X':
 	    switch(atoi(optarg)){
 	    case 1: use_bloom = 0;break;
@@ -550,6 +551,7 @@ int main(int argc,char **argv)
 	fprintf(stderr,"M must be between 5 and 32.\n");
 	exit(1);
     }
+    if (!opt_md5.empty()) masters.read_md5deep(opt_md5.c_str(),blocksize);
 
     argc -= optind; 
     argv += optind;
@@ -577,7 +579,7 @@ int main(int argc,char **argv)
 
     /* Load up all of the master files */
     for(;*argv;argv++){
-	masters.add_master_file(*argv);
+	masters.add_master_file(*argv,blocksize);
     }
 
     printf("Now searching image file...\n");
@@ -706,13 +708,13 @@ int main(int argc,char **argv)
 	    printf("RAW FILEMAP:\n");
 	    printf("===============================================================================\n");
 	    printf("\n");
-	    (*t)->print_report(0);
+	    (*t)->print_report(0,blocksize);
 	}
 
 	(*t)->filemap.clean();
 
 	/* note: perhaps it would make more sense to iteratively clean. */
-	(*t)->print_report(x);
+	(*t)->print_report(x,blocksize);
 	printf("Total blocks of original file found: %"PRId64" (%2.0f%%)\n",
 	       (*t)->filemap.found_count(),
 	       (*t)->filemap.found_percent());
